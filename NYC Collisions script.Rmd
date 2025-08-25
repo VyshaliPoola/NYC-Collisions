@@ -1,0 +1,121 @@
+---
+title: "NYC Collisions"
+author: "Vyshali"
+date: "2025-08-22"
+output: html_document
+---
+data/         # put your cleaned CSV here
+  outputs/      # CSV and PNG exports
+  scripts/      # R scripts
+  install.packages(c(
+    "tidyverse","lubridate","janitor","readr","readxl",
+    "writexl","ggplot2","scales","hexbin","here"
+  ))
+install.packages("readxl")
+library(readxl)
+# Load data
+collisions <- read_excel("data/Cleaned data.xlsx")
+
+# Check first few rows
+head(collisions)
+str(collisions)   # column types
+summary(collisions)  # quick summary
+
+install.packages("janitor")
+library(janitor)
+collisions <- clean_names(collisions)
+names(collisions)
+
+install.packages("tidyverse")
+library(tidyverse)
+install.packages("dplyr")      # run once
+library(dplyr)                 # load it every session
+
+
+
+agg_hour <- collisions %>%
+  count(hour, name = "collisions")
+
+head(agg_hour)
+
+agg_day_of_week <- collisions %>%
+  count(day_of_week, name = "collisions")
+agg_month <- collisions %>%
+  count(month, name = "collisions")
+
+
+agg_boro <- collisions %>% group_by(borough_clean) %>%
+  summarise(collisions = n(),
+            injuries   = sum(number_of_persons_injured, na.rm=TRUE),
+            fatalities = sum(number_of_persons_killed,  na.rm=TRUE)) %>%
+  arrange(desc(collisions))
+
+top_factors <- collisions %>% count(contributing_factor_vehicle_1, name="collisions") %>%
+  arrange(desc(collisions)) %>% slice_head(n=15)
+library(ggplot2)
+
+
+library(dplyr)
+
+agg_hour <- collisions %>%
+  count(hour, name = "collisions")
+
+ggplot(agg_hour, aes(x = hour, y = collisions)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "Collisions by Hour of Day",
+    x = "Hour of Day",
+    y = "Number of Collisions"
+  ) +
+  theme_minimal()
+agg_borough <- collisions %>%
+  count(borough, name = "collisions")
+
+ggplot(agg_borough, aes(x = reorder(borough, -collisions), y = collisions)) +
+  geom_col(fill = "tomato") +
+  labs(
+    title = "Collisions by Borough",
+    x = "Borough",
+    y = "Number of Collisions"
+  ) +
+  theme_minimal()
+
+agg_factor <- collisions %>%
+  count(contributing_factor_vehicle_1, name = "collisions") %>%
+  arrange(desc(collisions)) %>%
+  head(10)   # top 10 factors
+
+ggplot(agg_factor, aes(x = reorder(contributing_factor_vehicle_1, collisions), y = collisions)) +
+  geom_col(fill = "darkgreen") +
+  coord_flip() +
+  labs(
+    title = "Top 10 Contributing Factors",
+    x = "Factor",
+    y = "Number of Collisions"
+  ) +
+  theme_minimal()
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
